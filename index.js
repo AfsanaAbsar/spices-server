@@ -15,10 +15,13 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.shcd9.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+
+
 async function run() {
     try {
         await client.connect();
-        const spiceCollection = client.db('cuisine').collection('spice')
+        const spiceCollection = client.db('Cuisine1').collection('spice1')
+        console.log('db connected');
         app.get('/product', async (req, res) => {
             const query = {};
             const cursor = spiceCollection.find(query);
@@ -32,6 +35,37 @@ async function run() {
             const product = await spiceCollection.findOne(query);
             res.send(product)
         })
+
+        app.put('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedQuantity = req.body.updatedQuantity;
+
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    quantity: updatedQuantity,
+
+                }
+            }
+            console.log(updatedDoc);
+            const result = await spiceCollection.updateOne(filter, updatedDoc, options);
+            res.send(result)
+        })
+
+        app.delete('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await spiceCollection.deleteOne(query);
+            res.send(result)
+        })
+
+        app.post('/product', async (req, res) => {
+            const newProduct = req.body;
+            const result = await spiceCollection.insertOne(newProduct);
+            res.send(result)
+        })
+
     }
     finally {
 
